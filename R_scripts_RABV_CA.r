@@ -1,7 +1,3 @@
-# TO DO:
-	# - Figure 1: re-generating panel A only by considering Cambodian sequences from the main clade?
-	# - initiating a GitHub repo with everything in it (https://github.com/sdellicour/rabv_cambodia)
-
 library(adephylo)
 library(diagram)
 library(geometry)
@@ -194,7 +190,12 @@ setwd(wd); mcc_tre = readAnnotatedNexus("BEAST_DTA_SEA.tree"); rootHeight = max(
 times = as.matrix(distTips(mcc_tre, method="patristic"))
 times1 = times[which(!grepl("Cambodia",row.names(times))),which(!grepl("Cambodia",colnames(times)))]
 times2 = times[which(grepl("Cambodia",row.names(times))),which(grepl("Cambodia",colnames(times)))]
-times1a = c(); times1b = c(); countries = c(); times2 = times2[lower.tri(times2)]
+embeddedCambodianSequences = c("EU086170_Canis-lupus-familiaris_1997_Cambodia_NA_NA",
+							   "KM366268_Dog_2005-09-07_Cambodia-PhnomPenh-MeanChey-PrekPra-OuAndaung1_11.492_104.952",
+							   "KM366301_Dog_2009-08-19_Cambodia-KgChhnang-RoleaPhaAir-RoleaPhaAir-PreyKhmer_12.165_104.665")
+times3 = times2[which(!gsub("'","",row.names(times2))%in%embeddedCambodianSequences),
+			    which(!gsub("'","",colnames(times2))%in%embeddedCambodianSequences)]
+times1a = c(); times1b = c(); countries = c(); times2 = times2[lower.tri(times2)]; times3 = times3[lower.tri(times3)]
 for (i in 2:dim(times1)[1])
 	{
 		name1 = row.names(times1)[i]; country1 = unlist(strsplit(name1,"_"))[4]
@@ -210,10 +211,10 @@ for (i in 2:dim(times1)[1])
 pdf(paste0("BEAST_DTA_SEA_NEW1.pdf"), width=8, height=2.2); # dev.new(width=7, height=2.2)
 par(mar=c(1.5,1.7,0.5,0.5), oma=c(0,0,0,0), mgp=c(0,0.3,0), lwd=0.2, bty="o", col="gray30")
 plot(density(times2), col=NA, xlim=c(0,700), ylim=c(0,0.025), axes=F, ann=F, main=NA)
-polygon(density(times2), col=paste0(purple,"30"), border=NA)
+polygon(density(times3), col=paste0(purple,"30"), border=NA)
 polygon(density(times1a), col=paste0(orange,"30"), border=NA)
 polygon(density(times1b), col=paste0("#4D4D4D30"), border=NA)
-lines(density(times2), col=purple, lwd=1); lines(density(times1a), col=orange, lwd=1); lines(density(times1b), col="gray30", lwd=1)
+lines(density(times3), col=purple, lwd=1); lines(density(times1a), col=orange, lwd=1); lines(density(times1b), col="gray30", lwd=1)
 axis(side=1, lwd.tick=0.2, cex.axis=0.7, lwd=0.2, tck=-0.025, col.axis="gray30", mgp=c(0,0.04,0))
 axis(side=2, lwd.tick=0.2, cex.axis=0.7, lwd=0.2, tck=-0.025, col.axis="gray30", mgp=c(1,0.30,0))
 dev.off()
