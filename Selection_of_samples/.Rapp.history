@@ -1,0 +1,8 @@
+tab = read.csv("Final_samples_selection.csv", header=T)
+tab
+tab = read.csv("Final_samples_selection.csv", header=T)#
+#
+dim(tab)#
+length(unique(tab[,"city"]))
+tab = tab[order(tab[,"city"]),]
+tab
