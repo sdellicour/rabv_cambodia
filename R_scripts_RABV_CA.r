@@ -1,5 +1,6 @@
 library(adephylo)
 library(diagram)
+library(fields)
 library(geometry)
 library(lubridate)
 library(exactextractr)
@@ -14,13 +15,14 @@ library(seraphim)
 # 5. Preparing the environmental rasters for the landscape phylogeographic analyses
 # 6. Plotting the environmental rasters for the landscape phylogeographic analyses
 # 7. Extracting the spatio-temporal information embedded in posterior and MCC trees
-# 8. Plotting the dispersal history of RABV lineages in Cambodia (for both analyses)
-# 9. Estimating dispersal statistics based on continuous phylogeographic analyes
-# 10. Continuous phylogeographic reconstruction for RABV in Tanzania (Brunker et al. 2018)
-# 11. Comparing the weighted lineage dispersal velocity estimates with other datasets
-# 12. Generating a null dispersal model for the landscape phylogeographic analyses
-# 13. Testing the impact of environmental factors on lineage dispersal locations
-# 14. Testing the impact of environmental factors on lineage dispersal velocity
+# 8. Analysing the distribution/frequencies of fast long-distance dispersal events
+# 9. Plotting the dispersal history of RABV lineages in Cambodia (for both analyses)
+# 10. Estimating dispersal statistics based on continuous phylogeographic analyes
+# 11. Continuous phylogeographic reconstruction for RABV in Tanzania (Brunker et al. 2018)
+# 12. Comparing the weighted lineage dispersal velocity estimates with other datasets
+# 13. Generating a null dispersal model for the landscape phylogeographic analyses
+# 14. Testing the impact of environmental factors on lineage dispersal locations
+# 15. Testing the impact of environmental factors on lineage dispersal velocity
 
 wd = getwd(); source("MCC_tree_extraction.r")
 e_Cambodia_1 = extent(101, 109, 9, 16)
@@ -567,7 +569,64 @@ plot(human_pop, legend.only=T, add=T, col=cols, legend.width=0.5, legend.shrink=
 	 axis.args=list(cex.axis=0.5, lwd=0, lwd.tick=0.2, col.tick="gray30", tck=-0.7, col="gray30", col.axis="gray30", line=0, mgp=c(0,0.3,0)), alpha=1, side=3)
 dev.off()
 
-# 8. Plotting the dispersal history of RABV lineages in Cambodia (for both analyses)
+# 8. Analysing the distribution/frequencies of fast long-distance dispersal events
+
+mcc = read.csv(paste0("BEAST_RRW_analysis/Genomes/Compiled_genomes_aligned_gamma.csv"), head=T)
+mcc = read.csv(paste0("BEAST_RRW_analysis/N_genes/Compiled_N_genes_aligned_gamma.csv"), head=T)
+
+colours = c("#FAA521","#4676BB","#217B99"); cols = colours[3]
+cols1 = cols; cols2 = cols1; cols2[which(!is.na(cols2))] = paste0(cols2[which(!is.na(cols2))],"50")
+dists = rep(NA, dim(mcc)[1])
+for (i in 1:dim(mcc)[1])
+	{
+		x1 = cbind(mcc[i,"startLon"], mcc[i,"startLat"])
+		x2 = cbind(mcc[i,"endLon"], mcc[i,"endLat"])
+		dists[i] = rdist.earth(x1, x2, miles=F, R=NULL)
+	}
+
+dev.new(width=5, height=4.4); par(mgp=c(0,0,0), oma=c(0,0,0,0), mar=c(3.3,3.5,2,2), lwd=0.2, col="gray30")
+plot(dists, mcc[,"length"], col=cols2, pch=16, cex=0.8, axes=F, ann=F, frame=T); points(dists, mcc[,"length"], col=cols1, pch=1, cex=0.8)
+axis(side=1, lwd.tick=0.2, cex.axis=0.6, mgp=c(0,0.00,0), lwd=0.0, tck=-0.015, col.tick="gray30", col.axis="gray30", col="gray30")
+axis(side=2, lwd.tick=0.2, cex.axis=0.6, mgp=c(0,0.30,0), lwd=0.0, tck=-0.015, col.tick="gray30", col.axis="gray30", col="gray30")
+title(ylab="phylogenetic branch durations (km)", cex.lab=0.7, mgp=c(1.4,0,0), col.lab="gray30")
+title(xlab="geographic distance (km)", cex.lab=0.7, mgp=c(1.0,0,0), col.lab="gray30")
+
+dev.new(width=5, height=4.4); par(mgp=c(0,0,0), oma=c(0,0,0,0), mar=c(3.3,3.5,2,2), lwd=0.2, col="gray30")
+plot(dists, dists/mcc[,"length"], col=cols2, pch=16, cex=0.8, axes=F, ann=F, frame=T); points(dists, dists/mcc[,"length"], col=cols1, pch=1, cex=0.8)
+axis(side=1, lwd.tick=0.2, cex.axis=0.6, mgp=c(0,0.00,0), lwd=0.0, tck=-0.015, col.tick="gray30", col.axis="gray30", col="gray30")
+axis(side=2, lwd.tick=0.2, cex.axis=0.6, mgp=c(0,0.30,0), lwd=0.0, tck=-0.015, col.tick="gray30", col.axis="gray30", col="gray30")
+title(ylab="lineage dispersal velocity (km/years)", cex.lab=0.7, mgp=c(1.4,0,0), col.lab="gray30")
+title(xlab="geographic distance (km)", cex.lab=0.7, mgp=c(1.0,0,0), col.lab="gray30")
+
+dev.new(width=5, height=4.4); par(mgp=c(0,0,0), oma=c(0,0,0,0), mar=c(3.3,3.5,2,2), lwd=0.2, col="gray30")
+plot(log(dists), log(dists/mcc[,"length"]), col=cols2, pch=16, cex=0.8, axes=F, ann=F, frame=T)
+points(log(dists), log(dists/mcc[,"length"]), col=cols1, pch=1, cex=0.8)
+axis(side=1, lwd.tick=0.2, cex.axis=0.6, mgp=c(0,0.00,0), lwd=0.0, tck=-0.015, col.tick="gray30", col.axis="gray30", col="gray30")
+axis(side=2, lwd.tick=0.2, cex.axis=0.6, mgp=c(0,0.30,0), lwd=0.0, tck=-0.015, col.tick="gray30", col.axis="gray30", col="gray30")
+title(ylab="lineage dispersal velocity (km/years, log-transformed)", cex.lab=0.7, mgp=c(1.4,0,0), col.lab="gray30")
+title(xlab="geographic distance (km, log-transformed)", cex.lab=0.7, mgp=c(1.0,0,0), col.lab="gray30")
+
+for (i in 1:100)
+	{
+		tab = read.csv(paste0("Tree_extraction_files/N_genes/TreeExtractions_",i,".csv"), head=T)
+		dists = rep(NA, dim(tab)[1])
+		for (j in 1:dim(tab)[1])
+			{
+				x1 = cbind(tab[j,"startLon"], tab[j,"startLat"])
+				x2 = cbind(tab[j,"endLon"], tab[j,"endLat"])
+				dists[j] = rdist.earth(x1, x2, miles=F, R=NULL)
+			}
+		pdf(paste0("Tree_extraction_files/N_genes/TreeExtractions_",i,".pdf"), width=5, height=4.4)
+		par(mgp=c(0,0,0), oma=c(0,0,0,0), mar=c(3.3,3.5,2,2), lwd=0.2, col="gray30")
+		plot(dists, dists/tab[,"length"], col=cols2, pch=16, cex=0.8, axes=F, ann=F, frame=T, xlim=c(0,450))
+		points(dists, dists/tab[,"length"], col=cols1, pch=1, cex=0.8)
+		axis(side=1, lwd.tick=0.2, cex.axis=0.6, mgp=c(0,0.00,0), lwd=0.0, tck=-0.015, col.tick="gray30", col.axis="gray30", col="gray30")
+		axis(side=2, lwd.tick=0.2, cex.axis=0.6, mgp=c(0,0.30,0), lwd=0.0, tck=-0.015, col.tick="gray30", col.axis="gray30", col="gray30")
+		title(ylab="lineage dispersal velocity (km/years)", cex.lab=0.7, mgp=c(1.4,0,0), col.lab="gray30")
+		title(xlab="geographic distance (km)", cex.lab=0.7, mgp=c(1.0,0,0), col.lab="gray30"); dev.off()
+	}
+
+# 9. Plotting the dispersal history of RABV lineages in Cambodia (for both analyses)
 
 localTreesDirectory = "Tree_extraction_files/Genomes"; nberOfExtractionFiles = 900
 mcc = read.csv(paste0("BEAST_RRW_analysis/Genomes/Compiled_Genomes_aligned_gamma.csv"), head=T)
@@ -579,19 +638,19 @@ bsg = read.table(paste0("BEAST_RRW_analysis/N_genes/Compiled_N_genes_aligned_gam
 
 mcc1 = mcc[1,]; mcc2 = mcc[c(2:dim(mcc)[1]),]; mcc2 = mcc2[order(mcc2[,"endYear"]),]; mcc = rbind(mcc1,mcc2)
 
-	# 8.1. Loading the different GIS files used for the graphic
+	# v.1. Loading the different GIS files used for the graphic
 
 background = crop(raster("Environmental_rasters/Elevation_RABV_CA_008.asc"), e_Cambodia_2)
 lakes = crop(shapefile("All_natural_Earth_files/Natural_Earth_lakes.shp"), e_Cambodia_2)
 borders = crop(shapefile("All_Natural_Earth_files/International_borders.shp"), e_Cambodia_2)
 coastLines = crop(shapefile("All_Natural_Earth_files/Coastline_borders.shp"), e_Cambodia_2)
 
-	# 8.2. Estimating the 80% HPD regions for successive time slices
+	# v.2. Estimating the 80% HPD regions for successive time slices
 
 prob = 0.80; startDatum = min(mcc[,"startYear"]); precision = 5
 polygons = suppressWarnings(spreadGraphic2(localTreesDirectory, nberOfExtractionFiles, prob, startDatum, precision))
 
-	# 8.3. Defining the colour scale (for tree nodes and HPD regions)
+	# 9.3. Defining the colour scale (for tree nodes and HPD regions)
 
 cols = gsub("FF","",viridis::viridis(101)[1:101]); minYearColours = min(mcc[,"startYear"])
 endYearsM = ((mcc[,"endYear"]-minYearColours)/(max(mcc[,"endYear"])-minYearColours)*100)+1; endYearsM[endYearsM<1] = 1
@@ -605,7 +664,7 @@ for (i in 1:length(polygons))
 		cols_pol[[i]] = paste0(cols[pol_index],"20")
 	}
 
-	# 8.4. Generating and saving the spread graphic in a PDF format
+	# 9.4. Generating and saving the spread graphic in a PDF format
 
 dev.new(width=6.5, height=4.7); par(mfrow=c(1,1), oma=c(0,0,0,0), mar=c(0,1,0,0), mgp=c(1,0.2,0), lwd=0.3)
 plot(background, main="", cex.main=0.8, cex.axis=0.7, bty="n", box=F, axes=F, legend=F, axis.args=list(cex.axis=0.7), col="gray90", colNA="white")
@@ -633,7 +692,7 @@ rect(e_Cambodia_2@xmin, e_Cambodia_2@ymin, e_Cambodia_2@xmax, e_Cambodia_2@ymax,
 plot(legend, legend.only=T, add=T, col=cols, legend.width=0.5, legend.shrink=0.3, smallplot=c(0.880,0.890,0.042,0.956), adj=3,
 	 axis.args=list(cex.axis=0.55, lwd=0, lwd.tick=0.5, tck=-0.6, col="gray30", col.lab="gray30", col.axis="gray30", line=0, mgp=c(0,0.4,0)), alpha=1, side=3)
 
-	# 8.5. Generating and saving the skygrid reconstruction graphs
+	# 9.5. Generating and saving the skygrid reconstruction graphs
 
 bsg = bsg[which(bsg[,"Time"]>=minYear),]; bsg[,"Median"] = log10(bsg[,"Median"])
 bsg[,"Mean"] = log10(bsg[,"Mean"]); bsg[,"Lower"] = log10(bsg[,"Lower"]); bsg[,"Upper"] = log10(bsg[,"Upper"])
@@ -660,7 +719,7 @@ axis(side=1, lwd.tick=0.2, cex.axis=0.6, lwd=0.2, tck=-0.017, col="gray30", col.
 axis(side=2, lwd.tick=0.2, cex.axis=0.6, lwd=0.2, tck=-0.017, col="gray30", col.axis="gray30", mgp=c(1,0.30,0), at=seq(-1,4,1))
 mtext("log10(Ne)", side=2, col="gray30", cex=0.80, line=1.2, las=3)
 
-# 9. Estimating dispersal statistics based on continuous phylogeographic analyes
+# 10. Estimating dispersal statistics based on continuous phylogeographic analyes
 
 localTreesDirectory = "Tree_extraction_files/Genomes"; nberOfExtractionFiles = 900
 timeSlices = 50; onlyTipBranches = FALSE; showingPlots = FALSE; outputName = "All_dispersal_statistics/Genomes"; nberOfCores = 5; slidingWindow = 1
@@ -678,7 +737,7 @@ spreadStatistics(localTreesDirectory, nberOfExtractionFiles, timeSlices, onlyTip
 	# median value of original diffusion coefficient = 603.5 km2/year, 95% HPD = [400.7-1877.3]
 	# median value of weighted diffusion coefficient = 367.5 km2/year, 95% HPD = [319.8-418.5]
 
-# 10. Continuous phylogeographic reconstruction for RABV in Tanzania (Brunker et al. 2018)
+# 11. Continuous phylogeographic reconstruction for RABV in Tanzania (Brunker et al. 2018)
 
 localTreesDirectory = "Tree_extraction_files/Tanzania"; nberOfExtractionFiles = 900; mostRecentSamplingDatum = 2013.67945205479
 allTrees = scan(paste0("BEAST_RRW_analysis/Tanzania/RABV_Brunker_et_al_Tanzania_j001.trees"), what="", sep="\n", quiet=T)
@@ -734,7 +793,7 @@ plot(legend, legend.only=T, add=T, col=cols, legend.width=0.5, legend.shrink=0.3
 	 axis.args=list(cex.axis=0.55, lwd=0, lwd.tick=0.5, tck=-0.6, col="gray30", col.lab="gray30", col.axis="gray30", line=0, mgp=c(0,0.4,0)), alpha=1, side=3)
 dev.off()
 
-# 11. Comparing the weighted lineage dispersal velocity estimates with other datasets
+# 12. Comparing the weighted lineage dispersal velocity estimates with other datasets
 
 nberOfExtractionFiles = 900; maximumDistance = 1000; registerDoMC(cores=1)
 datasets = c("Genomes","N_genes","Previous/RABV_AF_900t","Tanzania","Previous/RABV_IR_900t","Previous/RABV_YU_900t")
@@ -885,7 +944,7 @@ for (h in 1:length(cutOffs))
 	}
 dev.off()
 
-# 12. Generating a null dispersal model for the landscape phylogeographic analyses
+# 13. Generating a null dispersal model for the landscape phylogeographic analyses
 
 analysis = "Genomes"; localTreesDirectory = "Tree_extraction_files/Genomes"; nberOfExtractionFiles = 900
 log = read.table("BEAST_RRW_analysis/Genomes/Compiled_Genomes_aligned_gamma.log", header=T)[102:1001,]
@@ -998,7 +1057,7 @@ for (i in dim(sim)[1]:1)
 		if (i == 1) points(sim[i,"startLon"], sim[i,"startLat"], pch=16, col="red", cex=0.3)
 	}
 
-# 13. Testing the impact of environmental factors on lineage dispersal locations
+# 14. Testing the impact of environmental factors on lineage dispersal locations
 
 analysis = "Genomes"; localTreesDirectory = "Tree_extraction_files/Genomes"; nberOfExtractionFiles = 900
 analysis = "N_genes"; localTreesDirectory = "Tree_extraction_files/N_genes"; nberOfExtractionFiles = 900
@@ -1048,7 +1107,7 @@ for (i in 1:length(envVariableNames))
 	}
 write.csv(BFs, paste0("All_seraphim_results/",analysis,"_support_dispersal_location.csv"), quote=F)
 
-# 14. Testing the impact of environmental factors on lineage dispersal velocity
+# 15. Testing the impact of environmental factors on lineage dispersal velocity
 
 nberOfExtractionFiles = 900; source("spreadFactors_mod.r")
 analysis = "Genomes"; localTreesDirectory = "Tree_extraction_files/Genomes"
