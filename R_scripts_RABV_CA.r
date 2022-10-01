@@ -7,6 +7,7 @@ library(exactextractr)
 library(maptools)
 library(phylotate)
 library(seraphim)
+library(sp)
 
 # 1. Generating the figure based on overall maximum likelihood RABV tree
 # 2. Selection of samples to sequence through a Markov chain procedure
@@ -31,7 +32,7 @@ purple = "#8151A1"; orange = "#FAA51A"
 
 # 1. Generating the figure based on overall maximum likelihood RABV tree
 
-tre = read.nexus("Global_RABV_ML.tree"); tab = read.csv("Global_RABV_ML.csv", head=T, sep=";")
+tre = read.nexus("Global_RABV_ML.tre"); tab = read.csv("Global_RABV_ML.csv", head=T, sep=";")
 locations = c("Cambodia","Southeast Asia","Asia","Caribbean","Central America","Europe",
 			  "Middle East","North Africa","North America","South America","Sub-Saharan Africa")
 colours = c(purple,orange,colorRampPalette(brewer.pal(12,"Paired"))(12)[c(1:8,12)])
@@ -39,6 +40,7 @@ cols = rep(NA, length(tre$tip.label))
 for (i in 1:length(tre$tip.label))
 	{
 		index1 = which(tab[,"full_name"]==gsub("'","",tre$tip.label[i]))
+		# if (length(index1) > 1) index1 = index1[1]
 		if (length(index1) != 1)
 			{
 				print(c(i))
@@ -78,13 +80,13 @@ nberOfRepetitions = 1000
 cambodia = getData("GADM", country="KHM", level=0)
 A = 0.9158
 
-	# 2.2. Loading the data
+	# 2.2. Loading and preparing the data
 
 colourScale = colorRampPalette(brewer.pal(11,"Spectral"))(11)[c(1,3,5,7,9,11)]
 cities = c(); spatialPoints = c(); years = c(); cols = c(); coords = c()
 for (i in 1:length(samplingYears))
 	{
-		csv = read.csv(paste0(samplingYears[i],"_UTM_sampling_frame.csv"), header=F)[2:4]
+		csv = read.csv(paste0(samplingYears[i],"_sampling_frame.csv"), header=F)[2:4]
 		colnames(csv) = c("city","x_coords","y_coords")
 		cities = c(cities, as.character(csv$city))
 		spatialPoints = rbind(spatialPoints, cbind(csv$x_coords,csv$y_coords))
@@ -147,7 +149,7 @@ for (r in 1:nberOfRepetitions)
 			}
 		selectedSamples = selectedSamples0
 		selectedPoints = cbind(as.numeric(allSamples[selectedSamples,"lon"]),as.numeric(allSamples[selectedSamples,"lat"]))		
-		triangulation = delaunayn(selectedPoints)
+		triangulation = geometry::delaunayn(selectedPoints)
 		adjacentsDistances1 = sum(allPairwiseDistances[triangulation[,1], triangulation[,2]])
 		adjacentsDistances2 = sum(allPairwiseDistances[triangulation[,2], triangulation[,3]])
 		adjacentsDistances3 = sum(allPairwiseDistances[triangulation[,1], triangulation[,3]])
@@ -529,20 +531,20 @@ dev.off()
 # 7. Extracting the spatio-temporal information embedded in posterior and MCC trees
 
 localTreesDirectory = "Tree_extraction_files/Genomes"; nberOfExtractionFiles = 900; mostRecentSamplingDatum = decimal_date(ymd("2017-12-20"))
-allTrees = scan(paste0("BEAST_RRW_analysis/Genomes/Compiled_Genomes_aligned_gamma.trees"), what="", sep="\n", quiet=T)
+allTrees = scan(paste0("BEAST_RRW_analyses/Genomes/Compiled_Genomes_aligned_gamma.trees"), what="", sep="\n", quiet=T)
 burnIn = 101; randomSampling = FALSE; nberOfTreesToSample = nberOfExtractionFiles; coordinateAttributeName = "gps"; nberOfCores = 5
 treeExtractions(localTreesDirectory, allTrees, burnIn, randomSampling, nberOfTreesToSample, mostRecentSamplingDatum, coordinateAttributeName, nberOfCores)
-mcc_tre = readAnnotatedNexus(paste0("BEAST_RRW_analysis/Genomes/Compiled_Genomes_aligned_gamma.tree"))
+mcc_tre = readAnnotatedNexus(paste0("BEAST_RRW_analyses/Genomes/Compiled_Genomes_aligned_gamma.tree"))
 mcc_tab = MCC_tree_extraction(mcc_tre, mostRecentSamplingDatum)
-write.csv(mcc_tab, paste0("BEAST_RRW_analysis/Genomes/Compiled_Genomes_aligned_gamma.csv"), row.names=F, quote=F)
+write.csv(mcc_tab, paste0("BEAST_RRW_analyses/Genomes/Compiled_Genomes_aligned_gamma.csv"), row.names=F, quote=F)
 
 localTreesDirectory = "Tree_extraction_files/N_genes"; nberOfExtractionFiles = 900; mostRecentSamplingDatum = decimal_date(ymd("2017-12-20"))
-allTrees = scan(paste0("BEAST_RRW_analysis/N_genes/Compiled_N_genes_aligned_gamma.trees"), what="", sep="\n", quiet=T)
+allTrees = scan(paste0("BEAST_RRW_analyses/N_genes/Compiled_N_genes_aligned_gamma.trees"), what="", sep="\n", quiet=T)
 burnIn = 101; randomSampling = FALSE; nberOfTreesToSample = nberOfExtractionFiles; coordinateAttributeName = "gps"; nberOfCores = 5
 treeExtractions(localTreesDirectory, allTrees, burnIn, randomSampling, nberOfTreesToSample, mostRecentSamplingDatum, coordinateAttributeName, nberOfCores)
-mcc_tre = readAnnotatedNexus(paste0("BEAST_RRW_analysis/N_genes/Compiled_N_genes_aligned_gamma.tree"))
+mcc_tre = readAnnotatedNexus(paste0("BEAST_RRW_analyses/N_genes/Compiled_N_genes_aligned_gamma.tree"))
 mcc_tab = MCC_tree_extraction(mcc_tre, mostRecentSamplingDatum)
-write.csv(mcc_tab, paste0("BEAST_RRW_analysis/N_genes/Compiled_N_genes_aligned_gamma.csv"), row.names=F, quote=F)
+write.csv(mcc_tab, paste0("BEAST_RRW_analyses/N_genes/Compiled_N_genes_aligned_gamma.csv"), row.names=F, quote=F)
 
 pdf(paste0("BEAST_DTA_SEA_NEW4.pdf"), width=3.5, height=3.5); # dev.new(width=3.5, height=3.5)
 par(oma=c(0,0,0,0.0), mar=c(0,3,0,0), mgp=c(0,0,0), lwd=0.2, col="gray30")
@@ -553,7 +555,7 @@ pol = lakes@polygons[[1]]@Polygons[[1]]; p = Polygon(pol@coords); ps = Polygons(
 sps = SpatialPolygons(list(ps)); pol = sf::st_as_sfc(sps); extraction = exact_extract(r, pol, include_cell=T)[[1]]
 extraction = extraction[which(extraction[,"coverage_fraction"]>0.5),]; r[extraction[,"cell"]] = NA; topography = r
 cols = colorRampPalette(c("grey","white"),bias=1)(max(r[],na.rm=T)-min(r[],na.rm=T))[1:(max(r[],na.rm=T)-min(r[],na.rm=T))]
-mcc_tab = read.csv(paste0("BEAST_RRW_analysis/N_genes/Compiled_N_genes_aligned_gamma.csv"), head=T)
+mcc_tab = read.csv(paste0("BEAST_RRW_analyses/N_genes/Compiled_N_genes_aligned_gamma.csv"), head=T)
 plot(topography, col=cols, ann=F, frame=F, box=F, axes=F, legend=F); plot(cambodia, col=NA, border="gray70", lwd=0.75, add=T)
 points(mcc_tab[which(!mcc_tab[,"node2"]%in%mcc_tab[,"node1"]),c("endLon","endLat")], cex=0.4, pch=1, col="gray30", lwd=0.2)
 points(mcc_tab[which(!mcc_tab[,"node2"]%in%mcc_tab[,"node1"]),c("endLon","endLat")], cex=0.4, pch=16, col=paste0(purple,"90"))
@@ -571,8 +573,8 @@ dev.off()
 
 # 8. Analysing the distribution/frequencies of fast long-distance dispersal events
 
-mcc = read.csv(paste0("BEAST_RRW_analysis/Genomes/Compiled_genomes_aligned_gamma.csv"), head=T)
-mcc = read.csv(paste0("BEAST_RRW_analysis/N_genes/Compiled_N_genes_aligned_gamma.csv"), head=T)
+mcc = read.csv(paste0("BEAST_RRW_analyses/Genomes/Compiled_genomes_aligned_gamma.csv"), head=T)
+mcc = read.csv(paste0("BEAST_RRW_analyses/N_genes/Compiled_N_genes_aligned_gamma.csv"), head=T)
 
 colours = c("#FAA521","#4676BB","#217B99"); cols = colours[3]
 cols1 = cols; cols2 = cols1; cols2[which(!is.na(cols2))] = paste0(cols2[which(!is.na(cols2))],"50")
@@ -629,12 +631,12 @@ for (i in 1:100)
 # 9. Plotting the dispersal history of RABV lineages in Cambodia (for both analyses)
 
 localTreesDirectory = "Tree_extraction_files/Genomes"; nberOfExtractionFiles = 900
-mcc = read.csv(paste0("BEAST_RRW_analysis/Genomes/Compiled_Genomes_aligned_gamma.csv"), head=T)
-bsg = read.table(paste0("BEAST_RRW_analysis/Genomes/Compiled_Genomes_aligned_gamma.txt"), head=T)
+mcc = read.csv(paste0("BEAST_RRW_analyses/Genomes/Compiled_Genomes_aligned_gamma.csv"), head=T)
+bsg = read.table(paste0("BEAST_RRW_analyses/Genomes/Compiled_Genomes_aligned_gamma.txt"), head=T)
 
 localTreesDirectory = "Tree_extraction_files/N_genes"; nberOfExtractionFiles = 900
-mcc = read.csv(paste0("BEAST_RRW_analysis/N_genes/Compiled_N_genes_aligned_gamma.csv"), head=T)
-bsg = read.table(paste0("BEAST_RRW_analysis/N_genes/Compiled_N_genes_aligned_gamma.txt"), head=T)
+mcc = read.csv(paste0("BEAST_RRW_analyses/N_genes/Compiled_N_genes_aligned_gamma.csv"), head=T)
+bsg = read.table(paste0("BEAST_RRW_analyses/N_genes/Compiled_N_genes_aligned_gamma.txt"), head=T)
 
 mcc1 = mcc[1,]; mcc2 = mcc[c(2:dim(mcc)[1]),]; mcc2 = mcc2[order(mcc2[,"endYear"]),]; mcc = rbind(mcc1,mcc2)
 
@@ -740,15 +742,15 @@ spreadStatistics(localTreesDirectory, nberOfExtractionFiles, timeSlices, onlyTip
 # 11. Continuous phylogeographic reconstruction for RABV in Tanzania (Brunker et al. 2018)
 
 localTreesDirectory = "Tree_extraction_files/Tanzania"; nberOfExtractionFiles = 900; mostRecentSamplingDatum = 2013.67945205479
-allTrees = scan(paste0("BEAST_RRW_analysis/Tanzania/RABV_Brunker_et_al_Tanzania_j001.trees"), what="", sep="\n", quiet=T)
+allTrees = scan(paste0("BEAST_RRW_analyses/Tanzania/RABV_Brunker_et_al_Tanzania_j001.trees"), what="", sep="\n", quiet=T)
 burnIn = 101; randomSampling = FALSE; nberOfTreesToSample = nberOfExtractionFiles; coordinateAttributeName = "gps"; nberOfCores = 5
 treeExtractions(localTreesDirectory, allTrees, burnIn, randomSampling, nberOfTreesToSample, mostRecentSamplingDatum, coordinateAttributeName, nberOfCores)
-mcc_tre = readAnnotatedNexus(paste0("BEAST_RRW_analysis/Tanzania/RABV_Brunker_et_al_Tanzania_j001.tree"))
+mcc_tre = readAnnotatedNexus(paste0("BEAST_RRW_analyses/Tanzania/RABV_Brunker_et_al_Tanzania_j001.tree"))
 mcc_tab = MCC_tree_extraction(mcc_tre, mostRecentSamplingDatum)
-write.csv(mcc_tab, paste0("BEAST_RRW_analysis/Tanzania/RABV_Brunker_et_al_Tanzania_j001.csv"), row.names=F, quote=F)
+write.csv(mcc_tab, paste0("BEAST_RRW_analyses/Tanzania/RABV_Brunker_et_al_Tanzania_j001.csv"), row.names=F, quote=F)
 
 localTreesDirectory = "Tree_extraction_files/Tanzania"; nberOfExtractionFiles = 900
-mcc = read.csv(paste0("BEAST_RRW_analysis/Tanzania/RABV_Brunker_et_al_Tanzania_j001.csv"), head=T)
+mcc = read.csv(paste0("BEAST_RRW_analyses/Tanzania/RABV_Brunker_et_al_Tanzania_j001.csv"), head=T)
 mcc1 = mcc[1,]; mcc2 = mcc[c(2:dim(mcc)[1]),]; mcc2 = mcc2[order(mcc2[,"endYear"]),]; mcc = rbind(mcc1,mcc2)
 tanzania = gSimplify(getData("GADM", country="TZA", level=0), 0.01)
 background = mask(raster("Environmental_rasters/Elevation_RABV_TA_008.asc"), tanzania)
@@ -767,7 +769,7 @@ for (i in 1:length(polygons))
 		cols_pol[[i]] = paste0(cols[pol_index],"20")
 	}
 
-pdf("BEAST_RRW_analysis/Tanzania/RABV_Brunker_et_al_Tanzania_j001.pdf", width=6, height=5.2)
+pdf("BEAST_RRW_analyses/Tanzania/RABV_Brunker_et_al_Tanzania_j001.pdf", width=6, height=5.2)
 par(mfrow=c(1,1), oma=c(0,0,0,0), mar=c(0.5,0.5,0.5,0), mgp=c(1,0.2,0), lwd=0.3)
 plot(background, main="", cex.main=0.8, cex.axis=0.7, bty="n", box=F, axes=F, legend=F, axis.args=list(cex.axis=0.7), col="gray90", colNA="white")
 for (i in 1:length(polygons))
@@ -947,12 +949,12 @@ dev.off()
 # 13. Generating a null dispersal model for the landscape phylogeographic analyses
 
 analysis = "Genomes"; localTreesDirectory = "Tree_extraction_files/Genomes"; nberOfExtractionFiles = 900
-log = read.table("BEAST_RRW_analysis/Genomes/Compiled_Genomes_aligned_gamma.log", header=T)[102:1001,]
-trees = readAnnotatedNexus("BEAST_RRW_analysis/Genomes/Compiled_Genomes_aligned_gamma.trees")[102:1001]
+log = read.table("BEAST_RRW_analyses/Genomes/Compiled_Genomes_aligned_gamma.log", header=T)[102:1001,]
+trees = readAnnotatedNexus("BEAST_RRW_analyses/Genomes/Compiled_Genomes_aligned_gamma.trees")[102:1001]
 
 analysis = "N_genes"; localTreesDirectory = "Tree_extraction_files/N_genes"; nberOfExtractionFiles = 900
-log = read.table("BEAST_RRW_analysis/N_genes/Compiled_N_genes_aligned_gamma.log", header=T)[102:1001,]
-trees = readAnnotatedNexus("BEAST_RRW_analysis/N_genes/Compiled_N_genes_aligned_gamma.trees")[102:1001]
+log = read.table("BEAST_RRW_analyses/N_genes/Compiled_N_genes_aligned_gamma.log", header=T)[102:1001,]
+trees = readAnnotatedNexus("BEAST_RRW_analyses/N_genes/Compiled_N_genes_aligned_gamma.trees")[102:1001]
 
 if (!file.exists(paste0("Environmental_rasters/Minimum_convex_hull_",analysis,"_04.asc")))
 	{
