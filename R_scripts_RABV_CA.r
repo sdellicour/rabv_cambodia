@@ -640,14 +640,14 @@ bsg = read.table(paste0("BEAST_RRW_analyses/N_genes/Compiled_N_genes_aligned_gam
 
 mcc1 = mcc[1,]; mcc2 = mcc[c(2:dim(mcc)[1]),]; mcc2 = mcc2[order(mcc2[,"endYear"]),]; mcc = rbind(mcc1,mcc2)
 
-	# v.1. Loading the different GIS files used for the graphic
+	# 9.1. Loading the different GIS files used for the graphic
 
 background = crop(raster("Environmental_rasters/Elevation_RABV_CA_008.asc"), e_Cambodia_2)
 lakes = crop(shapefile("All_natural_Earth_files/Natural_Earth_lakes.shp"), e_Cambodia_2)
 borders = crop(shapefile("All_Natural_Earth_files/International_borders.shp"), e_Cambodia_2)
 coastLines = crop(shapefile("All_Natural_Earth_files/Coastline_borders.shp"), e_Cambodia_2)
 
-	# v.2. Estimating the 80% HPD regions for successive time slices
+	# 9.2. Estimating the 80% HPD regions for successive time slices
 
 prob = 0.80; startDatum = min(mcc[,"startYear"]); precision = 5
 polygons = suppressWarnings(spreadGraphic2(localTreesDirectory, nberOfExtractionFiles, prob, startDatum, precision))

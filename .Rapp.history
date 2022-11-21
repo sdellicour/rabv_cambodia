@@ -1,0 +1,190 @@
+library(adephylo)#
+library(diagram)#
+library(fields)#
+library(geometry)#
+library(lubridate)#
+library(exactextractr)#
+library(maptools)#
+library(phylotate)#
+library(seraphim)#
+library(sp)#
+#
+# 1. Generating the figure based on overall maximum likelihood RABV tree#
+# 2. Selection of samples to sequence through a Markov chain procedure#
+# 3. Generating the figure based on the discrete phylogeographic analysis#
+# 4. Testing the correlation between the patristic and geographic distances#
+# 5. Preparing the environmental rasters for the landscape phylogeographic analyses#
+# 6. Plotting the environmental rasters for the landscape phylogeographic analyses#
+# 7. Extracting the spatio-temporal information embedded in posterior and MCC trees#
+# 8. Analysing the distribution/frequencies of fast long-distance dispersal events#
+# 9. Plotting the dispersal history of RABV lineages in Cambodia (for both analyses)#
+# 10. Estimating dispersal statistics based on continuous phylogeographic analyes#
+# 11. Continuous phylogeographic reconstruction for RABV in Tanzania (Brunker et al. 2018)#
+# 12. Comparing the weighted lineage dispersal velocity estimates with other datasets#
+# 13. Generating a null dispersal model for the landscape phylogeographic analyses#
+# 14. Testing the impact of environmental factors on lineage dispersal locations#
+# 15. Testing the impact of environmental factors on lineage dispersal velocity#
+#
+wd = getwd(); source("MCC_tree_extraction.r")#
+e_Cambodia_1 = extent(101, 109, 9, 16)#
+e_Cambodia_2 = extent(101.5, 108, 10, 15)#
+purple = "#8151A1"; orange = "#FAA51A"
+localTreesDirectory = "Tree_extraction_files/Genomes"; nberOfExtractionFiles = 900#
+mcc = read.csv(paste0("BEAST_RRW_analyses/Genomes/Compiled_Genomes_aligned_gamma.csv"), head=T)#
+bsg = read.table(paste0("BEAST_RRW_analyses/Genomes/Compiled_Genomes_aligned_gamma.txt"), head=T)#
+#
+localTreesDirectory = "Tree_extraction_files/N_genes"; nberOfExtractionFiles = 900#
+mcc = read.csv(paste0("BEAST_RRW_analyses/N_genes/Compiled_N_genes_aligned_gamma.csv"), head=T)#
+bsg = read.table(paste0("BEAST_RRW_analyses/N_genes/Compiled_N_genes_aligned_gamma.txt"), head=T)#
+#
+mcc1 = mcc[1,]; mcc2 = mcc[c(2:dim(mcc)[1]),]; mcc2 = mcc2[order(mcc2[,"endYear"]),]; mcc = rbind(mcc1,mcc2)#
+#
+	# 9.1. Loading the different GIS files used for the graphic#
+#
+background = crop(raster("Environmental_rasters/Elevation_RABV_CA_008.asc"), e_Cambodia_2)#
+lakes = crop(shapefile("All_natural_Earth_files/Natural_Earth_lakes.shp"), e_Cambodia_2)#
+borders = crop(shapefile("All_Natural_Earth_files/International_borders.shp"), e_Cambodia_2)#
+coastLines = crop(shapefile("All_Natural_Earth_files/Coastline_borders.shp"), e_Cambodia_2)#
+#
+	# 9.2. Estimating the 80% HPD regions for successive time slices#
+#
+prob = 0.80; startDatum = min(mcc[,"startYear"]); precision = 5#
+polygons = suppressWarnings(spreadGraphic2(localTreesDirectory, nberOfExtractionFiles, prob, startDatum, precision))
+localTreesDirectory = "Tree_extraction_files/Genomes"; nberOfExtractionFiles = 900
+mcc = read.csv(paste0("BEAST_RRW_analyses/Genomes/Compiled_Genomes_aligned_gamma.csv"), head=T)
+getwd()
+mcc = read.csv(paste0("BEAST_RRW_analyses/Genomes/Compiled_Genomes_aligned_gamma.csv"), head=T)
+localTreesDirectory = "Tree_extraction_files/Genomes"; nberOfExtractionFiles = 900#
+mcc = read.csv(paste0("BEAST_RRW_analyses/Genomes/Compiled_Genomes_aligned_gamma.csv"), head=T)#
+bsg = read.table(paste0("BEAST_RRW_analyses/Genomes/Compiled_Genomes_aligned_gamma.txt"), head=T)#
+#
+localTreesDirectory = "Tree_extraction_files/N_genes"; nberOfExtractionFiles = 900#
+mcc = read.csv(paste0("BEAST_RRW_analyses/N_genes/Compiled_N_genes_aligned_gamma.csv"), head=T)#
+bsg = read.table(paste0("BEAST_RRW_analyses/N_genes/Compiled_N_genes_aligned_gamma.txt"), head=T)
+localTreesDirectory = "Tree_extraction_files/Genomes"; nberOfExtractionFiles = 900#
+mcc = read.csv(paste0("BEAST_RRW_analyses/Genomes/Compiled_Genomes_aligned_gamma.csv"), head=T)#
+bsg = read.table(paste0("BEAST_RRW_analyses/Genomes/Compiled_Genomes_aligned_gamma.txt"), head=T)#
+#
+localTreesDirectory = "Tree_extraction_files/N_genes"; nberOfExtractionFiles = 900#
+mcc = read.csv(paste0("BEAST_RRW_analyses/N_genes/Compiled_N_genes_aligned_gamma.csv"), head=T)#
+bsg = read.table(paste0("BEAST_RRW_analyses/N_genes/Compiled_N_genes_aligned_gamma.txt"), head=T)
+localTreesDirectory = "Tree_extraction_files/Genomes"; nberOfExtractionFiles = 900#
+mcc = read.csv(paste0("BEAST_RRW_analyses/Genomes/Compiled_Genomes_aligned_gamma.csv"), head=T)#
+bsg = read.table(paste0("BEAST_RRW_analyses/Genomes/Compiled_Genomes_aligned_gamma.txt"), head=T)#
+#
+localTreesDirectory = "Tree_extraction_files/N_genes"; nberOfExtractionFiles = 900#
+mcc = read.csv(paste0("BEAST_RRW_analyses/N_genes/Compiled_N_genes_aligned_gamma.csv"), head=T)#
+bsg = read.table(paste0("BEAST_RRW_analyses/N_genes/Compiled_N_genes_aligned_gamma.txt"), head=T)
+mcc1 = mcc[1,]; mcc2 = mcc[c(2:dim(mcc)[1]),]; mcc2 = mcc2[order(mcc2[,"endYear"]),]; mcc = rbind(mcc1,mcc2)
+background = crop(raster("Environmental_rasters/Elevation_RABV_CA_008.asc"), e_Cambodia_2)#
+lakes = crop(shapefile("All_natural_Earth_files/Natural_Earth_lakes.shp"), e_Cambodia_2)#
+borders = crop(shapefile("All_Natural_Earth_files/International_borders.shp"), e_Cambodia_2)#
+coastLines = crop(shapefile("All_Natural_Earth_files/Coastline_borders.shp"), e_Cambodia_2)
+localTreesDirectory = "Tree_extraction_files/Genomes"; nberOfExtractionFiles = 900#
+mcc = read.csv(paste0("BEAST_RRW_analyses/Genomes/Compiled_Genomes_aligned_gamma.csv"), head=T)#
+bsg = read.table(paste0("BEAST_RRW_analyses/Genomes/Compiled_Genomes_aligned_gamma.txt"), head=T)
+mcc1 = mcc[1,]; mcc2 = mcc[c(2:dim(mcc)[1]),]; mcc2 = mcc2[order(mcc2[,"endYear"]),]; mcc = rbind(mcc1,mcc2)
+background = crop(raster("Environmental_rasters/Elevation_RABV_CA_008.asc"), e_Cambodia_2)#
+lakes = crop(shapefile("All_natural_Earth_files/Natural_Earth_lakes.shp"), e_Cambodia_2)#
+borders = crop(shapefile("All_Natural_Earth_files/International_borders.shp"), e_Cambodia_2)#
+coastLines = crop(shapefile("All_Natural_Earth_files/Coastline_borders.shp"), e_Cambodia_2)#
+#
+	# 9.2. Estimating the 80% HPD regions for successive time slices#
+#
+prob = 0.80; startDatum = min(mcc[,"startYear"]); precision = 5#
+polygons = suppressWarnings(spreadGraphic2(localTreesDirectory, nberOfExtractionFiles, prob, startDatum, precision))
+cols = gsub("FF","",viridis::viridis(101)[1:101]); minYearColours = min(mcc[,"startYear"])#
+endYearsM = ((mcc[,"endYear"]-minYearColours)/(max(mcc[,"endYear"])-minYearColours)*100)+1; endYearsM[endYearsM<1] = 1#
+cols_mcc = cols[endYearsM]; col_start = cols[1]; legend = raster(as.matrix(cbind(0,0)))#
+legend[1] = minYearColours; legend[2] = max(mcc[,"endYear"]); cols_pol = list()#
+for (i in 1:length(polygons))#
+	{#
+		date = as.numeric(names(polygons[[i]]))#
+		pol_index = round((((date-minYearColours)/(max(mcc[,"endYear"])-minYearColours))*100)+1)#
+		if (pol_index < 1) pol_index = 1#
+		cols_pol[[i]] = paste0(cols[pol_index],"20")#
+	}
+dev.new(width=6.5, height=4.7); par(mfrow=c(1,1), oma=c(0,0,0,0), mar=c(0,1,0,0), mgp=c(1,0.2,0), lwd=0.3)#
+plot(background, main="", cex.main=0.8, cex.axis=0.7, bty="n", box=F, axes=F, legend=F, axis.args=list(cex.axis=0.7), col="gray90", colNA="white")#
+plot(borders, lwd=0.5, add=T, col="gray50"); plot(lakes, add=T, border=NA, col="white")#
+for (i in 1:length(polygons))#
+	{#
+		plot(polygons[[i]], axes=F, col=cols_pol[[i]], add=T, border=NA)#
+	}#
+for (i in dim(mcc)[1]:1)#
+	{#
+		curvedarrow(cbind(mcc[i,"startLon"],mcc[i,"startLat"]), cbind(mcc[i,"endLon"],mcc[i,"endLat"]), arr.length=0,#
+				    arr.width=0, lwd=0.2, lty=1, lcol="gray30", arr.col=NA, arr.pos=FALSE, curve=0.15, dr=NA, endhead=F)#
+	}#
+for (i in dim(mcc)[1]:1)#
+	{#
+		points(mcc[i,"endLon"], mcc[i,"endLat"], pch=16, col=cols_mcc[i], cex=0.5)#
+		points(mcc[i,"endLon"], mcc[i,"endLat"], pch=1, col="gray30", cex=0.5, lwd=0.15)#
+		if (i == 1)#
+			{#
+				points(mcc[i,"startLon"], mcc[i,"startLat"], pch=16, col=col_start, cex=0.5)#
+				points(mcc[i,"startLon"], mcc[i,"startLat"], pch=1, col="gray30", cex=0.5, lwd=0.15)#
+			}#
+	}#
+rect(e_Cambodia_2@xmin, e_Cambodia_2@ymin, e_Cambodia_2@xmax, e_Cambodia_2@ymax, xpd=T, lwd=0.5, border="gray30")#
+plot(legend, legend.only=T, add=T, col=cols, legend.width=0.5, legend.shrink=0.3, smallplot=c(0.880,0.890,0.042,0.956), adj=3,#
+	 axis.args=list(cex.axis=0.55, lwd=0, lwd.tick=0.5, tck=-0.6, col="gray30", col.lab="gray30", col.axis="gray30", line=0, mgp=c(0,0.4,0)), alpha=1, side=3)
+localTreesDirectory = "Tree_extraction_files/N_genes"; nberOfExtractionFiles = 900#
+mcc = read.csv(paste0("BEAST_RRW_analyses/N_genes/Compiled_N_genes_aligned_gamma.csv"), head=T)#
+bsg = read.table(paste0("BEAST_RRW_analyses/N_genes/Compiled_N_genes_aligned_gamma.txt"), head=T)#
+#
+mcc1 = mcc[1,]; mcc2 = mcc[c(2:dim(mcc)[1]),]; mcc2 = mcc2[order(mcc2[,"endYear"]),]; mcc = rbind(mcc1,mcc2)#
+#
+	# 9.1. Loading the different GIS files used for the graphic#
+#
+background = crop(raster("Environmental_rasters/Elevation_RABV_CA_008.asc"), e_Cambodia_2)#
+lakes = crop(shapefile("All_natural_Earth_files/Natural_Earth_lakes.shp"), e_Cambodia_2)#
+borders = crop(shapefile("All_Natural_Earth_files/International_borders.shp"), e_Cambodia_2)#
+coastLines = crop(shapefile("All_Natural_Earth_files/Coastline_borders.shp"), e_Cambodia_2)#
+#
+	# 9.2. Estimating the 80% HPD regions for successive time slices#
+#
+prob = 0.80; startDatum = min(mcc[,"startYear"]); precision = 5#
+polygons = suppressWarnings(spreadGraphic2(localTreesDirectory, nberOfExtractionFiles, prob, startDatum, precision))#
+#
+	# 9.3. Defining the colour scale (for tree nodes and HPD regions)#
+#
+cols = gsub("FF","",viridis::viridis(101)[1:101]); minYearColours = min(mcc[,"startYear"])#
+endYearsM = ((mcc[,"endYear"]-minYearColours)/(max(mcc[,"endYear"])-minYearColours)*100)+1; endYearsM[endYearsM<1] = 1#
+cols_mcc = cols[endYearsM]; col_start = cols[1]; legend = raster(as.matrix(cbind(0,0)))#
+legend[1] = minYearColours; legend[2] = max(mcc[,"endYear"]); cols_pol = list()#
+for (i in 1:length(polygons))#
+	{#
+		date = as.numeric(names(polygons[[i]]))#
+		pol_index = round((((date-minYearColours)/(max(mcc[,"endYear"])-minYearColours))*100)+1)#
+		if (pol_index < 1) pol_index = 1#
+		cols_pol[[i]] = paste0(cols[pol_index],"20")#
+	}#
+#
+	# 9.4. Generating and saving the spread graphic in a PDF format#
+#
+dev.new(width=6.5, height=4.7); par(mfrow=c(1,1), oma=c(0,0,0,0), mar=c(0,1,0,0), mgp=c(1,0.2,0), lwd=0.3)#
+plot(background, main="", cex.main=0.8, cex.axis=0.7, bty="n", box=F, axes=F, legend=F, axis.args=list(cex.axis=0.7), col="gray90", colNA="white")#
+plot(borders, lwd=0.5, add=T, col="gray50"); plot(lakes, add=T, border=NA, col="white")#
+for (i in 1:length(polygons))#
+	{#
+		plot(polygons[[i]], axes=F, col=cols_pol[[i]], add=T, border=NA)#
+	}#
+for (i in dim(mcc)[1]:1)#
+	{#
+		curvedarrow(cbind(mcc[i,"startLon"],mcc[i,"startLat"]), cbind(mcc[i,"endLon"],mcc[i,"endLat"]), arr.length=0,#
+				    arr.width=0, lwd=0.2, lty=1, lcol="gray30", arr.col=NA, arr.pos=FALSE, curve=0.15, dr=NA, endhead=F)#
+	}#
+for (i in dim(mcc)[1]:1)#
+	{#
+		points(mcc[i,"endLon"], mcc[i,"endLat"], pch=16, col=cols_mcc[i], cex=0.5)#
+		points(mcc[i,"endLon"], mcc[i,"endLat"], pch=1, col="gray30", cex=0.5, lwd=0.15)#
+		if (i == 1)#
+			{#
+				points(mcc[i,"startLon"], mcc[i,"startLat"], pch=16, col=col_start, cex=0.5)#
+				points(mcc[i,"startLon"], mcc[i,"startLat"], pch=1, col="gray30", cex=0.5, lwd=0.15)#
+			}#
+	}#
+rect(e_Cambodia_2@xmin, e_Cambodia_2@ymin, e_Cambodia_2@xmax, e_Cambodia_2@ymax, xpd=T, lwd=0.5, border="gray30")#
+plot(legend, legend.only=T, add=T, col=cols, legend.width=0.5, legend.shrink=0.3, smallplot=c(0.880,0.890,0.042,0.956), adj=3,#
+	 axis.args=list(cex.axis=0.55, lwd=0, lwd.tick=0.5, tck=-0.6, col="gray30", col.lab="gray30", col.axis="gray30", line=0, mgp=c(0,0.4,0)), alpha=1, side=3)
