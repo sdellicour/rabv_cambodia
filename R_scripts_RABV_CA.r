@@ -2,6 +2,7 @@ library(adephylo)
 library(diagram)
 library(fields)
 library(geometry)
+library(HDInterval)
 library(lubridate)
 library(exactextractr)
 library(maptools)
@@ -286,17 +287,28 @@ par(mar=c(1,1,1,0), oma=c(0,0,0,0), mgp=c(0,0.1,0), lwd=0.2, bty="o")
 plot(mcc_tre, direction="downwards", show.tip.label=F, show.node.label=F, edge.width=0.45, cex=0.6, align.tip.label=3, col="gray30", edge.color=cols)
 for (i in 1:dim(mcc_tre$edge)[1])
 	{
-		if ((!mcc_tre$edge[i,2]%in%mcc_tre$edge[,1])&(tree$annotations[[i]]$location != "Cambodia"))
+		if ((!mcc_tre$edge[i,2]%in%mcc_tre$edge[,1])&(mcc_tre$annotations[[i]]$location != "Cambodia"))
 			{
 				nodelabels(node=mcc_tre$edge[i,2], pch=16, cex=0.5, col="white")
 				nodelabels(node=mcc_tre$edge[i,2], pch=16, cex=0.5, col=paste0(orange,"90"))
 				nodelabels(node=mcc_tre$edge[i,2], pch=1, cex=0.5, col="gray30", lwd=0.2)
 			}
-		if ((!mcc_tre$edge[i,2]%in%mcc_tre$edge[,1])&(tree$annotations[[i]]$location == "Cambodia"))
+		if ((!mcc_tre$edge[i,2]%in%mcc_tre$edge[,1])&(mcc_tre$annotations[[i]]$location == "Cambodia"))
 			{
 				nodelabels(node=mcc_tre$edge[i,2], pch=16, cex=0.5, col="white")
 				nodelabels(node=mcc_tre$edge[i,2], pch=16, cex=0.5, col=paste0(purple,"90"))
 				nodelabels(node=mcc_tre$edge[i,2], pch=1, cex=0.5, col="gray30", lwd=0.2)
+			}
+		if ((!is.null(mcc_tre$annotations[[i]]$posterior))&&((mcc_tre$edge[i,2]%in%mcc_tre$edge[,1])&(mcc_tre$annotations[[i]]$posterior >= 0.95)))
+			{
+				if (mcc_tre$annotations[[i]]$location != "Cambodia")
+					{
+						nodelabels(node=mcc_tre$edge[i,2], pch=16, cex=0.4, col=orange)
+					}
+				if (mcc_tre$annotations[[i]]$location == "Cambodia")
+					{
+						nodelabels(node=mcc_tre$edge[i,2], pch=16, cex=0.4, col=purple)
+					}
 			}
 	}
 selectedDates = c(1700, 1750, 1800, 1850, 1900, 1950, 2000, 2050); selectedLabels = selectedDates
@@ -559,6 +571,7 @@ mcc_tab = read.csv(paste0("BEAST_RRW_analyses/N_genes/Compiled_N_genes_aligned_g
 plot(topography, col=cols, ann=F, frame=F, box=F, axes=F, legend=F); plot(cambodia, col=NA, border="gray70", lwd=0.75, add=T)
 points(mcc_tab[which(!mcc_tab[,"node2"]%in%mcc_tab[,"node1"]),c("endLon","endLat")], cex=0.4, pch=1, col="gray30", lwd=0.2)
 points(mcc_tab[which(!mcc_tab[,"node2"]%in%mcc_tab[,"node1"]),c("endLon","endLat")], cex=0.4, pch=16, col=paste0(purple,"90"))
+pt = geosphere::destPoint(cbind(106.5,11.3), 90, 100000); rect(106.5, 11.3, pt[1,1], pt[1,2], 0.1, xpd=T, lwd=0.2) # 100 km scale
 dev.off()
 
 pdf(paste0("BEAST_DTA_SEA_NEW5.pdf"), width=3.5, height=3.5); # dev.new(width=3.5, height=3.5)
@@ -691,16 +704,27 @@ for (i in dim(mcc)[1]:1)
 			}
 	}
 rect(e_Cambodia_2@xmin, e_Cambodia_2@ymin, e_Cambodia_2@xmax, e_Cambodia_2@ymax, xpd=T, lwd=0.5, border="gray30")
+axis(1, pos=10, at=c(102,107), cex.axis=0.55, lwd=0, lwd.tick=0.5, tck=0.011, col="gray30", col.lab="gray30", col.axis="gray30", mgp=c(0,-1.3,0))
+axis(2, at=c(11,14), cex.axis=0.55, lwd=0, lwd.tick=0.5, tck=0.011, col="gray30", col.lab="gray30", col.axis="gray30", mgp=c(0,-1.0,0))
+pt = geosphere::destPoint(cbind(102,10.7), 90, 50000); rect(102, 10.7, pt[1,1], pt[1,2], 0.1, xpd=T, lwd=0.5) # 100 km scale
 plot(legend, legend.only=T, add=T, col=cols, legend.width=0.5, legend.shrink=0.3, smallplot=c(0.880,0.890,0.042,0.956), adj=3,
 	 axis.args=list(cex.axis=0.55, lwd=0, lwd.tick=0.5, tck=-0.6, col="gray30", col.lab="gray30", col.axis="gray30", line=0, mgp=c(0,0.4,0)), alpha=1, side=3)
 
 	# 9.5. Generating and saving the skygrid reconstruction graphs
 
+mcc = read.csv(paste0("BEAST_RRW_analyses/Genomes/Compiled_Genomes_aligned_gamma.csv"), head=T)
+minYear = min(mcc[,"startYear"]); maxYear = max(mcc[,"endYear"])
+bsg = read.table(paste0("BEAST_RRW_analyses/Genomes/Compiled_Genomes_aligned_gamma.txt"), head=T)
+bsg = bsg[which(bsg[,"Time"]>=minYear),]; bsg[,"Median"] = log10(bsg[,"Median"])
+bsg[,"Mean"] = log10(bsg[,"Mean"]); bsg[,"Lower"] = log10(bsg[,"Lower"]); bsg[,"Upper"] = log10(bsg[,"Upper"])
+
+mcc = read.csv(paste0("BEAST_RRW_analyses/N_genes/Compiled_N_genes_aligned_gamma.csv"), head=T)
+minYear = min(mcc[,"startYear"]); maxYear = max(mcc[,"endYear"])
+bsg = read.table(paste0("BEAST_RRW_analyses/N_genes/Compiled_N_genes_aligned_gamma.txt"), head=T)
 bsg = bsg[which(bsg[,"Time"]>=minYear),]; bsg[,"Median"] = log10(bsg[,"Median"])
 bsg[,"Mean"] = log10(bsg[,"Mean"]); bsg[,"Lower"] = log10(bsg[,"Lower"]); bsg[,"Upper"] = log10(bsg[,"Upper"])
 
 dev.new(width=6.5, height=3.5); par(oma=c(1,1,0,0), mar=c(0,1,0,0), mgp=c(1,0.2,0), lwd=0.3)
-minYear = min(mcc[,"startYear"]); maxYear = max(mcc[,"endYear"])
 xMin = min(bsg[,"Time"]); xMax = max(bsg[,"Time"]); xMin = minYear; timeSlice = bsg[1,"Time"]-bsg[2,"Time"]
 yMin = min(log10(bsg[,"Lower"])); yMax = max(log10(bsg[,"Upper"]))
 yMin = 0.5; yMax = 3.0 # for the skygrid based on the full genomes
@@ -720,6 +744,39 @@ lines(bsg[,"Time"], bsg[,"Median"], lwd=0.7, type="l", cex.axis=0.8, cex.lab=0.8
 axis(side=1, lwd.tick=0.2, cex.axis=0.6, lwd=0.2, tck=-0.017, col="gray30", col.axis="gray30", mgp=c(0,0.04,0), at=seq(1950,2020,10))
 axis(side=2, lwd.tick=0.2, cex.axis=0.6, lwd=0.2, tck=-0.017, col="gray30", col.axis="gray30", mgp=c(1,0.30,0), at=seq(-1,4,1))
 mtext("log10(Ne)", side=2, col="gray30", cex=0.80, line=1.2, las=3)
+
+mcc = read.csv(paste0("BEAST_RRW_analyses/Genomes/Compiled_Genomes_aligned_gamma.csv"), head=T)
+minYear = min(mcc[,"startYear"]); maxYear = max(mcc[,"endYear"])
+bsg = read.table(paste0("BEAST_RRW_analyses/Genomes/Compiled_Genomes_aligned_gamma.txt"), head=T)
+bsg = bsg[which(bsg[,"Time"]>=minYear),]; bsg[,"Median"] = log(bsg[,"Median"])
+bsg[,"Mean"] = log(bsg[,"Mean"]); bsg[,"Lower"] = log(bsg[,"Lower"]); bsg[,"Upper"] = log(bsg[,"Upper"])
+
+mcc = read.csv(paste0("BEAST_RRW_analyses/N_genes/Compiled_N_genes_aligned_gamma.csv"), head=T)
+minYear = min(mcc[,"startYear"]); maxYear = max(mcc[,"endYear"])
+bsg = read.table(paste0("BEAST_RRW_analyses/N_genes/Compiled_N_genes_aligned_gamma.txt"), head=T)
+bsg = bsg[which(bsg[,"Time"]>=minYear),]; bsg[,"Median"] = log(bsg[,"Median"])
+bsg[,"Mean"] = log(bsg[,"Mean"]); bsg[,"Lower"] = log(bsg[,"Lower"]); bsg[,"Upper"] = log(bsg[,"Upper"])
+
+dev.new(width=6.5, height=3.5); par(oma=c(1,1,0,0), mar=c(0,1,0,0), mgp=c(1,0.2,0), lwd=0.3)
+xMin = min(bsg[,"Time"]); xMax = max(bsg[,"Time"]); xMin = minYear; timeSlice = bsg[1,"Time"]-bsg[2,"Time"]
+yMin = min(log(bsg[,"Lower"])); yMax = max(log(bsg[,"Upper"]))
+yMin = 1.5; yMax = 6.5 # for the skygrid based on the full genomes
+yMin = 0.0; yMax = 7.5 # for the skygrid based on the N genes
+colours = cols[(((bsg[,c("Time")]-minYear)/(maxYear-minYear))*100)+1]
+plot(bsg[,"Time"], bsg[,"Median"], lwd=0.7, type="l", cex.axis=0.8, cex.lab=0.8, col="gray30", axes=F, xlab=NA, ylab=NA, xlim=c(xMin,xMax), ylim=c(yMin,yMax))
+xx_l = c(bsg[,c("Time")],rev(bsg[,c("Time")])); yy_l = c(bsg[,"Lower"],rev(bsg[,"Upper"]))
+getOption("scipen"); opt = options("scipen"=20); polygon(xx_l,yy_l,col=rgb(187/255,187/255,187/255,0.25),border=0)
+for (i in 1:length(bsg[,"Time"]))
+	{
+		x1 = bsg[i,"Time"]-(timeSlice/2); x2 = bsg[i,"Time"]+(timeSlice/2)
+		y1 = bsg[i,"Lower"]-0.2; y2 = bsg[i,"Upper"]+0.2
+		polygon(c(x1,x2,x2,x1), c(y1,y1,y2,y2), col=colours[i], border=NA)
+	}
+getOption("scipen"); opt = options("scipen"=20); polygon(xx_l,yy_l,col=NA,border="gray30")
+lines(bsg[,"Time"], bsg[,"Median"], lwd=0.7, type="l", cex.axis=0.8, cex.lab=0.8, col="gray30")
+axis(side=1, lwd.tick=0.2, cex.axis=0.6, lwd=0.2, tck=-0.017, col="gray30", col.axis="gray30", mgp=c(0,0.04,0), at=seq(1950,2020,10))
+axis(side=2, lwd.tick=0.2, cex.axis=0.6, lwd=0.2, tck=-0.017, col="gray30", col.axis="gray30", mgp=c(1,0.30,0), at=seq(-1,8,1))
+mtext("log(Ne)", side=2, col="gray30", cex=0.80, line=1.2, las=3)
 
 # 10. Estimating dispersal statistics based on continuous phylogeographic analyes
 
@@ -798,15 +855,16 @@ dev.off()
 # 12. Comparing the weighted lineage dispersal velocity estimates with other datasets
 
 nberOfExtractionFiles = 900; maximumDistance = 1000; registerDoMC(cores=1)
-datasets = c("Genomes","N_genes","Previous/RABV_AF_900t","Tanzania","Previous/RABV_IR_900t","Previous/RABV_YU_900t")
-colours1 = rep(NA, length(datasets)); colours2 = rep(NA, length(datasets))
+datasets = c("Genomes","N_genes","Previous/RABV_AF_900t","Tanzania","Previous/RABV_IR_900t","Previous/RABV_YG_900t","Previous/RABV_YN_900t")
+colours1 = rep(NA, length(datasets)); colours2 = rep(NA, length(datasets)); ltys = c(1,1,1,1,1,1,2)
 colours1[1] = rgb(150,150,150,255,maxColorValue=255); colours2[1] = rgb(150,150,150,100,maxColorValue=255) # light grey
 colours1[1] = rgb(76,76,76,255,maxColorValue=255); colours2[1] = rgb(60,60,60,100,maxColorValue=255) # dark grey
 colours1[2] = rgb(129,81,161,255,maxColorValue=255); colours2[2] = rgb(129,81,161,100,maxColorValue=255) # purple
 colours1[3] = rgb(250,165,26,255,maxColorValue=255); colours2[3] = rgb(250,165,26,100,maxColorValue=255) # orange
 colours1[4] = rgb(139,101,8,255,maxColorValue=255); colours2[4] = rgb(139,101,8,100,maxColorValue=255) # brown
 colours1[5] = rgb(222,67,39,255,maxColorValue=255); colours2[5] = rgb(222,67,39,100,maxColorValue=255) # red
-colours1[6] = rgb(70,118,187,255,maxColorValue=255); colours2[6] = rgb(70,118,187,100,maxColorValue=255) # blue
+colours1[6] = rgb(70,118,187,255,maxColorValue=255); colours2[6] = rgb(70,118,187,75,maxColorValue=255) # blue
+colours1[7] = rgb(70,118,187,255,maxColorValue=255); colours2[7] = rgb(70,118,187,25,maxColorValue=255) # blue
 for (i in 1:length(datasets))
 	{
 		localTreesDirectory = paste0("Tree_extraction_files/",datasets[i]); buffer = list()
@@ -875,8 +933,10 @@ for (h in 1:length(wldvs_list1))
 					{
 						quantiles = quantile(wldvs_list1[[h]][[i]][j,], probs=c(0.025,0.975), na.rm=T)
 						quantiles = quantile(wldvs_list1[[h]][[i]][j,], probs=c(0.1,0.9), na.rm=T)
+						HPD = HDInterval::hdi(wldvs_list1[[h]][[i]][j,], credMass=0.9)[1:2]
 						median[j,1] = median(wldvs_list1[[h]][[i]][j,], na.rm=T)
-						lower[j,1] = quantiles[1]; upper[j,1] = quantiles[2]
+						lower[j,1] = quantiles[1]; upper[j,1] = quantiles[2] # not correct
+						lower[j,1] = HPD[1]; upper[j,1] = HPD[2] # proper HPD estimates
 					}
 				tab = matrix(nrow=dim(wldvs_list1[[h]][[i]])[1], ncol=4)
 				colnames(tab) = c("maxDistance","median","lower_95HPD","higher_95HPD")
@@ -889,13 +949,13 @@ for (h in 1:length(wldvs_list1))
 pdf(paste0("WLDV_distances_NEW.pdf"), width=7.3, height=2.5); H = 1
 par(oma=c(0,0,0,0), mar=c(1.5,3,0,1), mgp=c(1,0.2,0), lwd=0.2, col="gray30")
 layout(matrix(c(1,1,1,1,1,1,1,1,1,2,3,4,2,3,4), ncol=5)); cutOffs = c(50, 100, 200)
-plottingDashedLinesForHPDintervals = FALSE; indices = c(6,5,4,3,2,1); c = 0
+plottingDashedLinesForHPDintervals = FALSE; indices = c(7,6,5,4,3,2,1); c = 0
 for (i in indices)
 	{
 		c = c+1; tab = wldvs_list2[[i]][[H]]
 		if (c == 1)
 			{
-				if (H == 1) plot(tab[,c("maxDistance","median")], xlim=c(30,750), ylim=c(1.3,33), col=NA, axes=F, ann=F)
+				if (H == 1) plot(tab[,c("maxDistance","median")], xlim=c(30,750), ylim=c(1.3,39), col=NA, axes=F, ann=F)
 				if (H == 2) plot(tab[,c("maxDistance","median")], xlim=c(30,550), ylim=c(1.3,500), col=NA, axes=F, ann=F)
 				if (H == 3) plot(tab[,c("maxDistance","median")], xlim=c(30,550), ylim=c(1.3,500), col=NA, axes=F, ann=F)
 			}
@@ -916,11 +976,11 @@ for (i in indices)
 for (i in indices)
 	{
 		tab = wldvs_list2[[i]][[H]]
-		lines(tab[,c("maxDistance","median")], lwd=1.5, type="l", cex.axis=0.8, cex.lab=0.8, col=colours1[i])
+		lines(tab[,c("maxDistance","median")], lwd=1.5, type="l", cex.axis=0.8, cex.lab=0.8, col=colours1[i], lty=ltys[i])
 	}
 for (i in 1:length(cutOffs)) abline(v=cutOffs[i], col="gray60", lwd=0.75, lty=2)
 axis(side=1, lwd.tick=0.2, cex.axis=0.70, lwd=0.2, tck=-0.017, col="gray30", col.axis="gray30", mgp=c(0,0.20,0), at=seq(0,800,100))
-axis(side=2, lwd.tick=0.2, cex.axis=0.70, lwd=0.2, tck=-0.020, col="gray30", col.axis="gray30", mgp=c(1,0.40,0), at=seq(-5,35,5))
+axis(side=2, lwd.tick=0.2, cex.axis=0.70, lwd=0.2, tck=-0.020, col="gray30", col.axis="gray30", mgp=c(1,0.40,0), at=seq(-5,45,5))
 title(ylab="weighted lineage dispersal velocity (km/year)", cex.lab=0.9, mgp=c(1.7,0,0), col.lab="gray30")
 title(xlab="geographic distance (km)", cex.lab=0.9, mgp=c(1.3,0,0), col.lab="gray30")
 for (h in 1:length(cutOffs))
@@ -930,17 +990,17 @@ for (h in 1:length(cutOffs))
 			{
 				c = c+1
 				vS = wldvs_list1[[i]][[H]][which(as.numeric(row.names(wldvs_list1[[i]][[H]]))==cutOffs[h]),]
-				if (c == 1) plot(density(vS), xlim=c(0,25), ylim=c(0,1.2), col=NA, axes=F, ann=F, mar=c(3,2,0,1))
+				if (c == 1) plot(density(vS), xlim=c(0,31), ylim=c(0,1.2), col=NA, axes=F, ann=F, mar=c(3,2,0,1))
 				polygon(density(vS), border=NA, col=colours2[i])
 			}
 		for (i in indices)
 			{	
 				vS = wldvs_list1[[i]][[H]][which(as.numeric(row.names(wldvs_list1[[i]][[H]]))==cutOffs[h]),]
-				lines(density(vS), lwd=1.0, col=colours1[i])
+				lines(density(vS), lwd=1.0, col=colours1[i], lty=ltys[i])
 			}
 		axis(side=2, lwd.tick=0.2, cex.axis=0.70, lwd=0.2, tck=-0.06, col="gray30", col.axis="gray30", mgp=c(1,0.40,0), at=seq(-0.5,1.5,0.5))
 		title(ylab="density", cex.lab=0.9, mgp=c(1.7,0,0), col.lab="gray30")
-		axis(side=1, lwd.tick=0.2, cex.axis=0.70, lwd=0.2, tck=-0.06, col="gray30", col.axis="gray30", mgp=c(0,0.20,0), at=seq(-5,30,5))
+		axis(side=1, lwd.tick=0.2, cex.axis=0.70, lwd=0.2, tck=-0.06, col="gray30", col.axis="gray30", mgp=c(0,0.20,0), at=seq(-5,40,5))
 		if (h == 3) title(xlab="weighted lineage dispersal velocity (km/year)", cex.lab=0.9, mgp=c(1.3,0,0), col.lab="gray30")
 		mtext(paste0("< ",cutOffs[h]," km"), side=3, line=-2.0, at=23.5, cex=0.6)
 	}
@@ -1107,7 +1167,7 @@ for (i in 1:length(envVariableNames))
 		p = (1-(lowerEnvValues/nberOfExtractionFiles)); BFs[i,"higher"] = round((p/(1-p))/(0.5/(1-0.5)),1)
 		meanEnvValues_obs_list[[i]] = meanEnvValues_obs; meanEnvValues_sim_list[[i]] = meanEnvValues_sim
 	}
-write.csv(BFs, paste0("All_seraphim_results/",analysis,"_support_dispersal_location.csv"), quote=F)
+write.csv(BFs, paste0("All_seraphim_results/",analysis,"_support_dispersal_location_NEW.csv"), quote=F)
 
 # 15. Testing the impact of environmental factors on lineage dispersal velocity
 
@@ -1198,8 +1258,10 @@ for (i in 1:length(pathModels))
 								index3 = which(grepl("delta_R2",colnames(simulations[[i]]))&grepl(rasterName,colnames(simulations[[i]]))
 											   &grepl(paste0("k",kS[l],"_",CR[k]),colnames(simulations[[i]])))
 								R2 = extractions[[i]][,index1]; Qe = extractions[[i]][,index2]; Qs = simulations[[i]][,index3]
-								allResults[L,3] = paste0(round(median(R2),3)," [",round(quantile(R2,0.025),3)," - ",round(quantile(R2,0.975),3),"]")
-								allResults[L,4] = paste0(round(median(Qe),3)," [",round(quantile(Qe,0.025),3)," - ",round(quantile(Qe,0.975),3),"]")
+								allResults[L,3] = paste0(round(median(R2),3)," [",round(quantile(R2,0.025),3)," - ",round(quantile(R2,0.975),3),"]") # not correct
+								allResults[L,3] = paste0(round(median(R2),3)," [",round(hdi(R2)[1:2],3)[1]," - ",round(hdi(R2)[1:2],3)[2],"]")
+								allResults[L,4] = paste0(round(median(Qe),3)," [",round(quantile(Qe,0.025),3)," - ",round(quantile(Qe,0.975),3),"]") # not correct
+								allResults[L,4] = paste0(round(median(Qe),3)," [",round(hdi(Qe)[1:2],3)[1]," - ",round(hdi(Qe)[1:2],3)[2],"]")
 								allResults[L,5] = round(sum(Qe>0)/nberOfExtractionFiles, 2)
 								if ((sum(Qe>0)/length(Qe)) > 0.9)
 									{
@@ -1216,5 +1278,5 @@ for (i in 1:length(pathModels))
 					}
 			}
 	}
-write.csv(allResults, paste0("All_seraphim_results/",analysis,"_support_dispersal_velocity.csv"), row.names=F, quote=F)
+write.csv(allResults, paste0("All_seraphim_results/",analysis,"_support_dispersal_velocity_NEW.csv"), row.names=F, quote=F)
 
