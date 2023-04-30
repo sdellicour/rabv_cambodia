@@ -1,37 +1,22 @@
-# Uncovering the endemic circulation of rabies in Cambodia
+This repo gathers all the input files and scripts related to our study entitled "Uncovering the endemic circulation of rabies in Cambodia" (Mayan *et al*., *in revision*): BEAST XML files of the discrete and continuous phylogeographic analyses, as well as R scripts and related files needed to run the samples selection step and the landscape phylogeographic analyses. Discrete and continuous phylogeographic inferences were performed with the Bayesian methods implemented in the open-source program [BEAST](http://github.com/beast-dev/beast-mcmc). Subsequent dispersal statistics estimation and landscape phylogeographic analyses were performed with R functions available in the package "[seraphim](http://evolve.zoo.ox.ac.uk/Evolve/Seraphim.html)".
 
-Full text is available [here]().
+## System requirements
 
-## Abstract
+- BEAST: the program runs on any operating system and requires the installation of the BEAGLE library for fast computations (https://github.com/beagle-dev/beagle-lib). Version of BEAST used in the present study: 1.10.4
+- "seraphim": the R package was mainly tested on Unix operating systems and requires the preliminary installation of several other R packages listed in the manual provided with the package
 
-In epidemiology, endemicity characterises sustained pathogen circulation in a geographical area, which involves a circulation that is not being maintained by external introductions. Because it could potentially shape the design of public health interventions, there is an interest in fully uncovering the endemic pattern of a disease. Here, we use a phylogeographic approach to investigate the endemic signature of rabies virus (RABV) circulation in Cambodia. Cambodia is located in one of the most affected regions in the world, but RABV circulation between and within Southeast Asian countries remains understudied in the area. Our analyses are based on a new comprehensive data set of 199 RABV genomes collected between 2014 and 2017 as well as previously published Southeast Asian RABV sequences. We show that most Cambodian sequences belong to a distinct clade that has been circulating almost exclusively in Cambodia. Our results thus point toward rabies circulation in Cambodia that does not rely on external introductions, which could have concrete implications in terms of mitigation strategy in the region. More globally, our study illustrates how phylogeographic investigations can be performed to assess and characterise viral endemicity in a context of relatively limited data.
+## Installation guide
 
-## Analyses
+- instructions to install BEAST: http://beast.community/installing
+- instructions to install BEAGLE: https://github.com/beagle-dev/beagle-lib
+- instructions to install "seraphim": https://github.com/sdellicour/seraphim
 
-This repository contains input data and codes necessary to reproduce the results presented in the original paper. The R code `R_scripts_RABV_CA.r` notably contains the procedure for sample selection, the post-processing steps of the continuous phylogeographic analyses, and all the steps of the landscape phylogeographic analysis.    
+## Demo and instructions for use
 
-### Sample selection
+The file `R_scripts_RABV_CA.r` gathers all the R scripts used to performed post hoc landscape phylogeographic analyses. In addition, there are also several existing tutorial allowing to perform the same analyses:
+- instructions to run a continuous phylogeographic analysis in BEAST: tutorial available [here](https://beast.community/workshop_continuous_diffusion_yfv). Output: time-scaled annotated phylogenetic trees. Run time: several weeks, depending on the computational resources
+- instructions to estimate dispersal statistics with "seraphim": tutorial available [here](https://github.com/sdellicour/seraphim/blob/master/tutorials/Estimating_dispersal_statistics.pdf) (related example files are available in the directory with the same name). Output: estimated dispersal statistics (graphics, mean/median values, HPD intervals). Run time: < 1 hour
+- instructions to use "seraphim" to perform relaxed random walk (RRW) simulations along posterior trees: tutorial available [here](https://github.com/sdellicour/seraphim/blob/master/tutorials/RRW_simulations_along_trees.pdf) (related example files are available in the directory with the same name). Output: spatially-annotated posterior trees along which a new RRW diffusion process has been re-simulated. These simulations are used to generate a null dispersal model, which is further exploited to test the impact of environmental factors on the dispersal location and velocity of viral lineages, as well as to test the impact of migratory bird flyways on the dispersal frequency of viral lineages. Run time: several hours when ran in parallel on several CPUs
+- instructions to test the impact of environmental factors on lineage dispersal locations with "seraphim": tutorial available [here](https://github.com/sdellicour/seraphim/blob/master/tutorials/Impact_on_dispersal_direction.pdf) (related example files are available in the directory with the same name). Output: distribution of *E* statistics (see the text for further detail) and statistical support (Bayes factors) for each environmental factor. Run time: < 1 day
+- instructions to test the impact of environmental factors on lineage dispersal velocity with "seraphim": tutorial available [here](https://github.com/sdellicour/seraphim/blob/master/tutorials/Impact_on_dispersal_velocity.pdf) (related example files are available in the directory with the same name). Output: distribution of *Q* statistics (see the text and Appendix for further detail) and statistical support (Bayes factors) for each environmental factor. Run time: several days when ran in parallel on several CPUs
 
-We could sequence only 208 RABV positive dog brain samples out of the 627 that were available at the Institut Pasteur du Cambodge at the time of the study. In order to maximise the spatiotemporal coverage of the final dataset for the phylogeographic analyses, we subsampled the 208 sequences using a Markov process that maximises the sum D of great-circle distances along the edges of a Delaunay triangulation network connecting all selected samples. The available and selected samples are listed in the folder `Selection_of_samples`.
-
-### Maximum likelihood tree of the Cambodian sequences and a representative sample of the canine RABV genetic diversity 
-
-We identified the canine RABV clades that circulate in Cambodia by reconstructing a maximum likelihood tree using all the Cambodian N genes sequenced in this study and available on Genbank, as well as a representative sample of the genetic diversity of canine RABV across continents. The accession numbers of all sequences are listed in the `All_accession_IDs.csv` table. A dictionary of the variables of this table is available in `All_accession_IDs_dictionary.csv`. Finally, the nexus file `Global_RABV_ML.tree` contains the maximum likelihood tree reconstructed with IQ-TREE v2.0.6.     
-
-### Discrete phylogeography
-
-We then identified the probable movements between Cambodia and the other Southeast Asian countries using a discrete phylogeographic model implemented in BEAST v1.10 and BEAGLE v3. 
-
-The input data and the parameterization of the discrete phylogeographic model are available in the following BEAST XML file: `BEAST_DTA_SEA.xml`.   
-
-The marginal posterior distributions are available in `BEAST_DTA_SEA.log` and the maximum clade credibility tree is available in `BEAST_DTA_SEA.tree`.
-
-### Continuous phylogeography
-
-We further investigated the circulation of RABV among dog populations within Cambodia in a continuous phylogeographic analysis. 
-
-The input data and model parameterization of the continous phylogeographic models for the N genes and the genomes are available in the `BEAST_RRW_analyses` folder. In the R code `R_scripts_RABV_CA.r`, one can find the analysis procedure to estimate the dispersal statistics made available in the `All_dispersal_statistics` folder.
-
-### Landscape phylogeography
-
-Finally, we estimated the association between environmental distances calculated for a selection of environmental rasters (see `Environmental_rasters`) and both lineage dispersal velocity and lineage dispersal location. Due to storage limitations, we do not provide here all the data extracted from the tree posterior distributions to perform the landscape analysis but a subset of them. Nevertheless, we provide the quantitative results of this analysis in the `All_seraphim_results` folder.
