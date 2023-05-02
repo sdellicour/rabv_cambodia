@@ -1,0 +1,20 @@
+Description of the different variables in "All_accession_IDs.csv":
+- ID: accession number of the sequence
+- type: genome or N gene
+- date: collection date of the sequence
+- continent: continent of collection
+- country: country where the sequence was collected
+- province: administrative province where the sequence was collected
+- district: administrative district where the sequence was collected
+- municipality: administrative commune where the sequence was collected
+- village: village where the sequence was collected
+- latitude: latitude of the collection site
+- longitude: longitude of the collection site
+- host: host species
+- source: whether the sequence was retrieved from GenBank or sequenced in this study (GenBank/newly sequenced)
+- clade: clade or subclade (for non Cosmopolitan clades) identified by RABV-GLUE
+- full_name: name of the sequence used in the maximum likelihood tree and the continuous phylogeographic analyses
+- full_name_discrete: name of the sequence used in the discrete phylogeographic analysis
+- ml_tree: sequence included in the maximum likelihood tree (yes/no)
+- discrete_phylo_tree: sequence included in the discrete phylogeography (yes/no)
+- continuous_phylo_tree: sequence included in the continuous phylogeography
