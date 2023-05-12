@@ -253,7 +253,7 @@ for (i in 2:dim(times1)[1])
 	} # countries = unique(countries)
 pdf(paste0("BEAST_DTA_SEA_NEW1.pdf"), width=8, height=2.2); # dev.new(width=7, height=2.2)
 par(mar=c(1.5,1.7,0.5,0.5), oma=c(0,0,0,0), mgp=c(0,0.3,0), lwd=0.2, bty="o", col="gray30")
-plot(density(times2), col=NA, xlim=c(0,700), ylim=c(0,0.025), axes=F, ann=F, main=NA)
+plot(density(times2), col=NA, xlim=c(0,720), ylim=c(0,0.0225), axes=F, ann=F, main=NA)
 polygon(density(times3), col=paste0(purple,"30"), border=NA)
 polygon(density(times1a), col=paste0(orange,"30"), border=NA)
 polygon(density(times1b), col=paste0("#4D4D4D30"), border=NA)
@@ -318,9 +318,10 @@ dev.off()
 
 	# 3.3. Age of the MRCA of the main Cambodian clade
 
-age = mostRecentSamplingDatum-48.892 # obtained through FigTree
-hpd95 = mostRecentSamplingDatum-c(57.360,40.906) # obtained through FigTree
+age = mostRecentSamplingDatum-49.175 # obtained through FigTree
+hpd95 = mostRecentSamplingDatum-c(57.104,41.190) # obtained through FigTree
 cat(round(age,1),", 95% HPD = [",round(hpd95[1],1),"-",round(hpd95[2],1),"]",sep="")
+	# 1970.6, 95% HPD = [1962.7-1978.6]
 
 # 4. Testing the correlation between the patristic and geographic distances
 	
@@ -882,19 +883,28 @@ for (i in 1:length(datasets))
 					}
 			}
 	}
-minDistance = 0; maxDistance = 1000; interval = 5; wldvs_list1 = list(); wldvs_list2 = list()
+minDistance = 0; maxDistance = 1000; interval = 5
+wldvs_list1 = list(); wldvs_list2 = list()
+wdcs_list1 = list(); wdcs_list2 = list()
 for (h in 1:length(datasets))
 	{
-		localTreesDirectory = paste0("Tree_extraction_files/",datasets[h]); wldvs_temp = list()
+		localTreesDirectory = paste0("Tree_extraction_files/",datasets[h])
+		wldvs_temp = list(); wdcs_temp = list()
 		for (i in 1:3)
 			{
-				buffer = foreach(t = 1:nberOfExtractionFiles) %dopar% {				
-				# for (t in 1:nberOfExtractionFiles) {
+				wldvs = matrix(nrow=maxDistance/interval, ncol=nberOfExtractionFiles)
+				row.names(wldvs) = seq(interval, maxDistance, interval)
+				wdcs = matrix(nrow=maxDistance/interval, ncol=nberOfExtractionFiles)
+				row.names(wdcs) = seq(interval, maxDistance, interval)
+				# buffer = foreach(t = 1:nberOfExtractionFiles) %dopar% {				
+				for (t in 1:nberOfExtractionFiles) {
 						data = read.csv(paste0(localTreesDirectory,"/TreeExtractions_",t,".csv"), h=T)
 						dists = rdist.earth(data[,c("startLon","startLat")], data[,c("endLon","endLat")], miles=F)
 						distances = diag(dists); durations = data[,"endYear"]-data[,"startYear"]
 						wldv = matrix(nrow=maxDistance/interval, ncol=2)
 						wldv[,1] = seq(interval, maxDistance, interval)
+						wdc = matrix(nrow=maxDistance/interval, ncol=2)
+						wdc[,1] = seq(interval, maxDistance, interval)
 						for (j in 1:dim(wldv)[1])
 							{
 								if (i == 1) # WLDV list for the maximum geographic distances
@@ -910,16 +920,15 @@ for (h in 1:length(datasets))
 										indices = which((distances>=(wldv[j,1]-25))&(distances>=(wldv[j,1]+25)))
 									}
 								wldv[j,2] = sum(distances[indices])/sum(durations[indices])
+								wdc[j,2] = sum(distances[indices]^2)/sum(4*durations[indices])
 							}
-						colnames(wldv) = c("maxDist", "wldv")
-						wldv
+						colnames(wldv) = c("maxDist", "wldv"); colnames(wdc) = c("maxDist", "wdc")
+						wldvs[,t] = wldv[,2]; wdcs[,t] = wdc[,2]
 					}
-				wldvs = matrix(nrow=maxDistance/interval, ncol=nberOfExtractionFiles)
-				row.names(wldvs) = seq(interval, maxDistance, interval)
-				for (t in 1:length(buffer)) wldvs[,t] = buffer[[t]][,2]
-				wldvs_temp[[i]] = wldvs
+				# for (t in 1:length(buffer)) wldvs[,t] = buffer[[t]][,2]
+				wldvs_temp[[i]] = wldvs; wdcs_temp[[i]] = wdcs
 			}
-		wldvs_list1[[h]] = wldvs_temp
+		wldvs_list1[[h]] = wldvs_temp; wdcs_list1[[h]] = wdcs_temp
 	}
 for (h in 1:length(wldvs_list1))
 	{
@@ -945,6 +954,31 @@ for (h in 1:length(wldvs_list1))
 				wldvs_temp[[i]] = tab
 			}
 		wldvs_list2[[h]] = wldvs_temp
+	}
+for (h in 1:length(wdcs_list1))
+	{
+		wdcs_temp = list()
+		for (i in 1:length(wdcs_list1[[h]]))
+			{
+				median = matrix(nrow=dim(wdcs_list1[[h]][[i]])[1], ncol=1)
+				lower = matrix(nrow=dim(wdcs_list1[[h]][[i]])[1], ncol=1)
+				upper = matrix(nrow=dim(wdcs_list1[[h]][[i]])[1], ncol=1)
+				for (j in 1:dim(wdcs_list1[[h]][[i]])[1])
+					{
+						quantiles = quantile(wdcs_list1[[h]][[i]][j,], probs=c(0.025,0.975), na.rm=T)
+						quantiles = quantile(wdcs_list1[[h]][[i]][j,], probs=c(0.1,0.9), na.rm=T)
+						HPD = HDInterval::hdi(wdcs_list1[[h]][[i]][j,], credMass=0.9)[1:2]
+						median[j,1] = median(wdcs_list1[[h]][[i]][j,], na.rm=T)
+						lower[j,1] = quantiles[1]; upper[j,1] = quantiles[2] # not correct
+						lower[j,1] = HPD[1]; upper[j,1] = HPD[2] # proper HPD estimates
+					}
+				tab = matrix(nrow=dim(wdcs_list1[[h]][[i]])[1], ncol=4)
+				colnames(tab) = c("maxDistance","median","lower_95HPD","higher_95HPD")
+				tab[,1] = as.numeric(row.names(wdcs_list1[[h]][[i]]))
+				tab[,2] = median[,1]; tab[,3] = lower[,1]; tab[,4] = upper[,1]
+				wdcs_temp[[i]] = tab
+			}
+		wdcs_list2[[h]] = wdcs_temp
 	}
 pdf(paste0("WLDV_distances_NEW.pdf"), width=7.3, height=2.5); H = 1
 par(oma=c(0,0,0,0), mar=c(1.5,3,0,1), mgp=c(1,0.2,0), lwd=0.2, col="gray30")
@@ -981,8 +1015,8 @@ for (i in indices)
 for (i in 1:length(cutOffs)) abline(v=cutOffs[i], col="gray60", lwd=0.75, lty=2)
 axis(side=1, lwd.tick=0.2, cex.axis=0.70, lwd=0.2, tck=-0.017, col="gray30", col.axis="gray30", mgp=c(0,0.20,0), at=seq(0,800,100))
 axis(side=2, lwd.tick=0.2, cex.axis=0.70, lwd=0.2, tck=-0.020, col="gray30", col.axis="gray30", mgp=c(1,0.40,0), at=seq(-5,45,5))
-title(ylab="weighted lineage dispersal velocity (km/year)", cex.lab=0.9, mgp=c(1.7,0,0), col.lab="gray30")
-title(xlab="geographic distance (km)", cex.lab=0.9, mgp=c(1.3,0,0), col.lab="gray30")
+title(ylab="Weighted lineage dispersal velocity (km/year)", cex.lab=0.9, mgp=c(1.7,0,0), col.lab="gray30")
+title(xlab="Geographic distance (km)", cex.lab=0.9, mgp=c(1.3,0,0), col.lab="gray30")
 for (h in 1:length(cutOffs))
 	{
 		c = 0
@@ -999,10 +1033,69 @@ for (h in 1:length(cutOffs))
 				lines(density(vS), lwd=1.0, col=colours1[i], lty=ltys[i])
 			}
 		axis(side=2, lwd.tick=0.2, cex.axis=0.70, lwd=0.2, tck=-0.06, col="gray30", col.axis="gray30", mgp=c(1,0.40,0), at=seq(-0.5,1.5,0.5))
-		title(ylab="density", cex.lab=0.9, mgp=c(1.7,0,0), col.lab="gray30")
+		title(ylab="Density", cex.lab=0.9, mgp=c(1.7,0,0), col.lab="gray30")
 		axis(side=1, lwd.tick=0.2, cex.axis=0.70, lwd=0.2, tck=-0.06, col="gray30", col.axis="gray30", mgp=c(0,0.20,0), at=seq(-5,40,5))
 		if (h == 3) title(xlab="weighted lineage dispersal velocity (km/year)", cex.lab=0.9, mgp=c(1.3,0,0), col.lab="gray30")
 		mtext(paste0("< ",cutOffs[h]," km"), side=3, line=-2.0, at=23.5, cex=0.6)
+	}
+dev.off()
+pdf(paste0("WDCs_distances_NEW.pdf"), width=7.3, height=2.5); H = 1
+par(oma=c(0,0,0,0), mar=c(1.5,3,0,1), mgp=c(1,0.2,0), lwd=0.2, col="gray30")
+layout(matrix(c(1,1,1,1,1,1,1,1,1,2,3,4,2,3,4), ncol=5)); cutOffs = c(50, 100, 200)
+plottingDashedLinesForHPDintervals = FALSE; indices = c(7,6,5,4,3,2,1); c = 0
+for (i in indices)
+	{
+		c = c+1; tab = wdcs_list2[[i]][[H]]
+		if (c == 1)
+			{
+				if (H == 1) plot(tab[,c("maxDistance","median")] , xlim=c(30,750), ylim=c(0,2100), col=NA, axes=F, ann=F)
+				if (H == 2) plot(tab[,c("maxDistance","median")] , xlim=c(30,750), ylim=c(0,95), col=NA, axes=F, ann=F)
+				if (H == 3) plot(tab[,c("maxDistance","median")] , xlim=c(30,750), ylim=c(0,95), col=NA, axes=F, ann=F)
+			}
+		xx_l = c(tab[,c("maxDistance")],rev(tab[,c("maxDistance")]))
+		yy_l = c(tab[,"lower_95HPD"],rev(tab[,"higher_95HPD"]))
+		getOption("scipen"); opt = options("scipen"=20)
+		polygon(xx_l, yy_l, col=colours2[i], border=0)
+	}
+for (i in indices)
+	{
+		if (plottingDashedLinesForHPDintervals == TRUE)
+			{
+				tab = wdcs_list2[[i]][[H]]
+				lines(tab[,c("maxDistance","lower_95HPD")], lwd=0.7, type="l", cex.axis=0.8, cex.lab=0.8, col=colours1[i], lty=2)
+				lines(tab[,c("maxDistance","higher_95HPD")], lwd=0.7, type="l", cex.axis=0.8, cex.lab=0.8, col=colours1[i], lty=2)
+			}
+	}
+for (i in indices)
+	{
+		tab = wdcs_list2[[i]][[H]]
+		lines(tab[,c("maxDistance","median")], lwd=1.5, type="l", cex.axis=0.8, cex.lab=0.8, col=colours1[i], lty=ltys[i])
+	}
+for (i in 1:length(cutOffs)) abline(v=cutOffs[i], col="gray60", lwd=0.75, lty=2)
+axis(side=1, lwd.tick=0.2, cex.axis=0.70, lwd=0.2, tck=-0.017, col="gray30", col.axis="gray30", mgp=c(0,0.20,0), at=seq(0,800,100))
+axis(side=2, lwd.tick=0.2, cex.axis=0.70, lwd=0.2, tck=-0.020, col="gray30", col.axis="gray30", mgp=c(1,0.40,0), at=seq(-200,2200,200))
+title(ylab="Weighted diffusion coefficient (km2/year)", cex.lab=0.9, mgp=c(1.7,0,0), col.lab="gray30")
+title(xlab="Geographic distance (km)", cex.lab=0.9, mgp=c(1.3,0,0), col.lab="gray30")
+for (h in 1:length(cutOffs))
+	{
+		c = 0
+		for (i in indices)
+			{
+				c = c+1
+				vS = wdcs_list1[[i]][[H]][which(as.numeric(row.names(wdcs_list1[[i]][[H]]))==cutOffs[h]),]
+				if (c == 1) plot(density(vS), xlim=c(0,750), ylim=c(0,0.15), col=NA, axes=F, ann=F, mar=c(3,2,0,1))
+				polygon(density(vS), border=NA, col=colours2[i])
+			}
+		for (i in indices)
+			{	
+				vS = wdcs_list1[[i]][[H]][which(as.numeric(row.names(wdcs_list1[[i]][[H]]))==cutOffs[h]),]
+				lines(density(vS), lwd=1.0, col=colours1[i], lty=ltys[i])
+			}
+		axis(side=2, lwd.tick=0.2, cex.axis=0.70, lwd=0.2, tck=-0.06, col="gray30", col.axis="gray30", mgp=c(1,0.40,0), at=seq(-0.05,0.15,0.05))
+		title(ylab="Density", cex.lab=0.9, mgp=c(1.7,0,0), col.lab="gray30")
+		axis(side=1, lwd.tick=0.2, cex.axis=0.70, lwd=0.2, tck=-0.06, col="gray30", col.axis="gray30", mgp=c(0,0.20,0), at=seq(-100,800,100))
+		if (h == 3) title(xlab="Weighted diffusion coefficient (km2/year)", cex.lab=0.9, mgp=c(1.3,0,0), col.lab="gray30")
+		mtext(paste0("< ",cutOffs[h]," km"), side=3, line=-2.0, at=600, cex=0.6)
 	}
 dev.off()
 
